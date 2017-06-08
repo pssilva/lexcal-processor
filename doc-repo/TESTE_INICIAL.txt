@@ -1,0 +1,159 @@
+TESTE INICIAL
+ 
+Introdução
+ 
+Suponha que exista uma linguagem de programação dentro do MS Word, em que você pode 
+usar variáveis e expressões no meio do texto. Os blocos onde são inseridas as variáveis 
+ou expressões no texto são chamados de “blocos”. A sintaxe da linguagem é mostrada nos 
+seguintes exemplos:
+ 
+Variável: {var1}
+“var1” é uma variável
+“{“ e “}“ são os delimitadores do bloco de variável ou de expressão
+Expressão: {var1 + var2}
+“var1” e “var2” são variáveis
+“+” é um operador
+Expressão: {var1 - 5}
+“var1” é uma variável
+“-” é um operador
+5 é um número inteiro
+Expressão: {var1 * 2.5}
+“var1” é uma variável
+“*” é um operador
+2.5 é um número decimal
+ 
+ 
+O conteúdo analisado vem de um arquivo XML restrito às seguintes tags:
+ 
+<w:document> - Documento (como <html> em HTML)
+<w:body> - Corpo do documento (como <body> em HTML)
+<w:p> - Parágrafo (como <p> em HTML)
+<w:r><w:t> - bloco de texto (run) (como <span> em HTML)
+ 
+ 
+Apesar de existirem outras tags, vamos nos limitar a apenas essas tags no teste. O texto, 
+que é exibido no editor, encontra-se dentro das tags de bloco de texto (runs) e pode estar 
+distribuído em várias runs ao longo de um parágrafo. A quebra do texto em várias runs não 
+influencia a exibição final, portanto, o texto de um parágrafo pode estar em uma única run 
+ou em várias runs, arbitrariamente.
+ 
+Agora iremos mostrar alguns exemplos de como um texto do Word é representado no XML.
+ 
+ 
+ 
+TEXTO EXIBIDO NO EDITOR (MS WORD):
+
+O valor da variável var1 é: {var1}.
+O valor da variável var2 é: {var2}.
+A soma de var1 e var2 é: {var1 + var2}.
+O dobro de var1 é: {2 * var1}.
+ 
+CONTEÚDO DO XML (a quebra em runs é arbitrária dentro do parágrafo):
+ 
+<w:document>
+ <w:body>
+  <w:p>
+   <w:r><w:t>O valor d</w:t></w:r>
+   <w:r><w:t>a variável var1 é: </w:t></w:r>
+   <w:r><w:t>{var1</w:t></w:r>
+   <w:r><w:t>}</w:t></w:r>
+   <w:r><w:t>.</w:t></w:r>
+  </w:p>
+  <w:p>
+   <w:r><w:t>O valor da variável var2 é: {var2}.</w:t></w:r>
+  </w:p>
+  <w:p>
+   <w:r><w:t>A so</w:t></w:r>
+   <w:r><w:t>ma de var1 e va</w:t></w:r>
+   <w:r><w:t>r2 é: {var1 </w:t></w:r>
+   <w:r><w:t>+</w:t></w:r>
+   <w:r><w:t> var</w:t></w:r>
+   <w:r><w:t>2}.</w:t></w:r>
+  </w:p>
+  <w:p>
+   <w:r><w:t>O dobro de var1 é: {2 * var1}.</w:t></w:r>
+  </w:p>
+ </w:body>
+<w:document>
+ 
+ 
+O Analisador Léxico
+ 
+O propósito deste teste é criar um analisador léxico para o XML do documento Word. O analisador 
+deve reconhecer as estruturas e criar uma lista com os tokens encontrados. Os tokens representam 
+as unidades léxicas encontradas no texto. Cada token deve conter o seu tipo e o seu valor. 
+ 
+ 
+Os tipos dos tokens podem ser os seguintes:
+ 
+TAG: as tags w:document, w:body e w:p (abertura e fechamento)
+BLOCK_BEGIN: a parte da run que contém o caractere “{“ (delimita o início do bloco de expressão)
+BLOCK_END: a parte da run que contém o caractere “}“ (delimita o final do bloco de expressão)
+IDENTIFIER: as variáveis das expressões dos blocos
+OPERATOR: Os operadores aritméticos das expressões (“+”, “-”, “*”, “/” e “%”) 
+NUMBER: números decimais ou inteiros dentro das expressões
+RUN: textos que não estão dentro dos blocos
+ 
+ 
+Sempre que os símbolos “{” ou “}” forem encontrados dentro de uma run, essa run deve ser dividida. 
+O símbolo encontrado deve se separado dos demais, dando origem a um token com os caracteres antes 
+do símbolo (se não houver caracteres antes, o token não é criado), um token contendo apenas o símbolo
+ encontrado, e outro token com os caracteres após o símbolo (se não houver caracteres após, o token não é criado).
+ 
+Para o exemplo do XML citado anteriormente devemos ter a seguinte lista de tokens no retorno, em formato JSON:
+ 
+{
+   "tokens": [
+{“TAG”, “<w:document>”},
+{“TAG”, “<w:body>”},
+{“TAG”, “<w:p>”},
+{“RUN”, “<w:r><w:t>O valor d</w:t></w:r>”},
+{“RUN”, “<w:r><w:t>a variável var1 é: </w:t></w:r>”},
+{“BLOCK_BEGIN”, “<w:r><w:t>{</w:t></w:r>”},
+{“IDENTIFIER”, “var1”},
+{“BLOCK_END”, “<w:r><w:t>}</w:t></w:r>”},
+{“RUN”, “<w:r><w:t>.</w:t></w:r>”},
+{“TAG”, “</w:p>”},
+{“TAG”, “<w:p>”},
+{“RUN”, “<w:r><w:t>O valor da variável var2 é: </w:t></w:r>”},
+{“BLOCK_BEGIN”, “<w:r><w:t>{</w:t></w:r>”},
+{“IDENTIFIER”, “var2”},
+{“BLOCK_END”, “<w:r><w:t>}</w:t></w:r>”},
+{“RUN”, “<w:r><w:t>.</w:t></w:r>”},
+{“TAG”, “</w:p>”},
+{“TAG”, “<w:p>”},
+{“RUN”, “<w:r><w:t>A so</w:t></w:r>”},
+{“RUN”, “<w:r><w:t>ma de var1 e va</w:t></w:r>”},
+{“RUN”, “<w:r><w:t>r2 é: ”},
+{“BLOCK_BEGIN”, “<w:r><w:t>{</w:t></w:r>”},
+{“IDENTIFIER”, “var1”},
+{“OPERATOR”, “+”},
+{“IDENTIFIER”, “var2”},
+{“BLOCK_END”, “<w:r><w:t>}</w:t></w:r>”},
+{“RUN”, “<w:r><w:t>.</w:t></w:r>”},
+{“TAG”, “</w:p>”},
+{“TAG”, “<w:p>”},
+{“RUN”, “<w:r><w:t>O dobro de var1 é: </w:t></w:r>”},
+{“BLOCK_BEGIN”, “<w:r><w:t>{</w:t></w:r>”},
+{“NUMBER”, “2”},
+{“OPERATOR”, “*”},
+{“IDENTIFIER”, “var1”},
+{“BLOCK_END”, “<w:r><w:t>}</w:t></w:r>”},
+{“RUN”, “<w:r><w:t>.</w:t></w:r>”},
+{“TAG”, “</w:p>”},
+{“TAG”, “</w:body>”},
+{“TAG”, “<w:document>”}
+   ]
+}
+ 
+ 
+O analisador léxico deve rodar em linha de comando e receber 2 parâmetros: o nome do arquivo XML 
+de entrada e o nome do arquivo JSON de saída com os tokens. O programa deve ser compilável pela linha 
+de comando, sem exigir IDE específica.
+
+
+
+
+
+
+

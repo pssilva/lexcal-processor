@@ -1,0 +1,10 @@
+####
+
+.classpath
+.project
+.settings/
+name_file_out.json
+target/
+testeNetLex_factoryPattern.Principal.log
+
+
