@@ -12,7 +12,7 @@
   <description>O Analisador Léxico – Projeto para o processamento de arquivos XML do documento Word. O analisador deve reconhecer as estruturas e criar uma lista com os tokens encontrados.</description>
   <properties>
   	<spring.framework.version>3.2.1.RELEASE</spring.framework.version>
-  	<spring.batch.version>3.0.2.RELEASE</spring.batch.version>
+  	<spring.batch.version>3.0.10</spring.batch.version>
   	<project.build.sourceEncoding>UTF-8</project.build.sourceEncoding>
   	<mainClass>batch.ExecuteLexicalAnalyzer</mainClass>
   </properties>
